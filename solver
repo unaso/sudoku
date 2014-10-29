@@ -1,0 +1,117 @@
+
+"""
+Coding Challenge:
+
+Implement a Sudoku puzzle solver in Python (using 2.7.5)
+It inputs a CSV file consisting of an unsolved Sudoku with 0's representing blanks.
+It outputs a CSV file with the solved Sudoku.
+"""
+
+import csv
+import copy
+import sys
+import os
+
+matrix = []
+m_size = 9
+
+selection = xrange(1,m_size+1)
+
+with open('sudoku_examplefile.csv', 'rU') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        matrix.append([int(x) for x in row])
+
+def print_matrix(matrix):
+	#for output
+	with open('sudoku_solution.csv','w') as f:
+		for row in matrix:
+			line1 = ""
+			for col in row:
+				line1 += str(col) + ","
+			f.write(line1[:-1] + os.linesep)
+
+def main(matrix, row, col):
+	#find zero
+	if matrix[row][col] == 0:
+		#iterate nd replace
+		for num in selection:
+			matrix[row][col] = num
+			if correct_choice(matrix, row, col):
+				#print "row " + str(row) + " col " + str(col) + " num is" + str(num)
+				jump_to_next(matrix, row, col)
+		else:
+			#reset selection
+			matrix[row][col] = 0
+	else:
+		#all possible numbers failed... going back....
+		jump_to_next(matrix, row, col)
+
+def jump_to_next(matrix, row, col):
+	#Helper function to take the check further
+	if col + 1 != m_size:
+		main(matrix, row, col +1)
+	elif row + 1 != m_size:
+		main(matrix, row + 1, 0)
+	else:
+		#Search brought to the end of the sudoku table
+		print_matrix(matrix)
+		sys.exit(0)
+
+#################################################################
+
+#helper function
+def print_quadrant(matrix,row,col):
+	i = (row/3)*3
+	for quadrant_row in matrix[i:i+3]:
+		line1 = ''
+		j = (col/3)*3
+		for element in quadrant_row[j:j+3]:
+			if not (i == row and j == col):
+				line1 += str(element) + "("+str(i)+"x"+str(j)+")," 
+			else:
+				line1 +=  "x("+str(i)+"x"+str(j)+"),"
+			j +=1
+		print line1
+		i +=1
+##################################################################
+
+#_______________________________________________________
+
+def correct_choice(matrix, row, col):
+	if matrix[row][col] == 0:
+		return True
+
+	#iteration over given row
+	for j, element in enumerate(matrix[row][:m_size]):
+		if j != col:
+			if matrix[row][j] == matrix[row][col]:
+				#print "check row"
+				return False
+
+	#iteration over given col
+	for i,element in enumerate(matrix[:m_size][col]):
+		if i != row:
+			if matrix[i][col] == matrix[row][col]:
+				#print "check col"
+				return False
+
+	#iteration over quadrant
+	i = (row/3)*3
+	for quadrant_row in matrix[i:i+3]:
+		j = (col/3)*3
+		for element in quadrant_row[j:j+3]:
+			#print element
+			if not (i == row and j == col):
+				#print element
+				if element == matrix[row][col]:
+					#print "check box"
+					return False
+			j +=1
+		i +=1
+	return True
+#_______________________________________________________
+	
+main(matrix, 0,0)
+
+print_matrix(matrix)
